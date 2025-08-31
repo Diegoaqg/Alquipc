@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Facturación Alquiler de Equipos</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        form {
+            max-width: 500px;
+            margin: auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        label {
+            display: block;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        input, select, button {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+        button {
+            background: #4CAF50;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .resultado {
+            max-width: 700px;
+            margin: 20px auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .error {
+            color: red;
+            font-size: 0.9em;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f0f0f0;
+        }
+        .total {
+            font-size: 1.2em;
+            font-weight: bold;
+            background-color: #e0ffe0;
+        }
+        .aviso {
+            color: red;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>Sistema de Facturación - Alquiler de Equipos</h1>
+    <form id="formAlquiler">
+        <label>Nombre del cliente:</label>
+        <input type="text" id="nombre">
+        <div id="errorNombre" class="error"></div>
+
+        <label>Teléfono (Colombia, 10 dígitos, empieza con 3):</label>
+        <input type="text" id="telefono">
+        <div id="errorTelefono" class="error"></div>
+
+        <label>Email:</label>
+        <input type="email" id="email">
+        <div id="errorEmail" class="error"></div>
+
+        <label>Cantidad de equipos (mínimo 2):</label>
+        <input type="number" id="equipos" min="2">
+        <div id="errorEquipos" class="error"></div>
+
+        <label>Días iniciales (mínimo 1):</label>
+        <input type="number" id="diasIniciales" min="1">
+        <div id="errorDias" class="error"></div>
+
+        <label>Tipo de alquiler:</label>
+        <select id="tipoAlquiler">
+            <option value="local">Local físico (-5%)</option>
+            <option value="ciudad">Dentro de la ciudad</option>
+            <option value="fuera">Fuera de la ciudad (+5%)</option>
+        </select>
+
+        <label>Días adicionales:</label>
+        <input type="number" id="diasAdicionales" min="0" value="0">
+        <div id="errorDiasAdicionales" class="error"></div>
+
+        <button type="button" onclick="generarFactura()">Generar Factura</button>
+    </form>
+
+    <div id="resultado" class="resultado" style="display:none;"></div>
+
+    <script>
+        let idCliente = 1;
+        const valorDia = 35000;
+
+        function validarNombre(nombre) {
+            nombre = nombre.trim().replace(/\s+/g, ' ');
+            if (nombre.length < 3 || nombre.length > 50) return false;
+            return /^[A-Za-z\s]+$/.test(nombre);
+        }
+
+        function validarTelefono(telefono) {
+            telefono = telefono.replace(/\D/g,'');
+            return telefono.length === 10 && telefono.startsWith('3');
+        }
+
+        function validarEmail(email) {
+            return /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email) && email.length >= 6;
+        }
+
+        function validarEntero(valor, minimo) {
+            return Number.isInteger(valor) && valor >= minimo;
+        }
+
+        function generarFactura() {
+            const nombre = document.getElementById('nombre').value;
+            const telefono = document.getElementById('telefono').value;
+            const email = document.getElementById('email').value;
+            const equipos = parseInt(document.getElementById('equipos').value);
+            const diasIniciales = parseInt(document.getElementById('diasIniciales').value);
+            const tipo = document.getElementById('tipoAlquiler').value;
+            const diasAdicionales = parseInt(document.getElementById('diasAdicionales').value);
+
+            // Reset errores
+            document.getElementById('errorNombre').innerText = '';
+            document.getElementById('errorTelefono').innerText = '';
+            document.getElementById('errorEmail').innerText = '';
+            document.getElementById('errorEquipos').innerText = '';
+            document.getElementById('errorDias').innerText = '';
+            document.getElementById('errorDiasAdicionales').innerText = '';
+
+            let errores = false;
+
+            // Validaciones
+            if (!validarNombre(nombre)) { document.getElementById('errorNombre').innerText = 'Nombre inválido (3-50 letras y espacios)'; errores = true; }
+            if (!validarTelefono(telefono)) { document.getElementById('errorTelefono').innerText = 'Teléfono inválido para Colombia'; errores = true; }
+            if (!validarEmail(email)) { document.getElementById('errorEmail').innerText = 'Email inválido'; errores = true; }
+            if (!validarEntero(equipos, 2)) { document.getElementById('errorEquipos').innerText = 'Cantidad mínima de equipos: 2'; errores = true; }
+            if (!validarEntero(diasIniciales, 1)) { document.getElementById('errorDias').innerText = 'Días iniciales mínimos: 1'; errores = true; }
+            if (!validarEntero(diasAdicionales, 0)) { document.getElementById('errorDiasAdicionales').innerText = 'Días adicionales no pueden ser negativos'; errores = true; }
+
+            if (errores) return;
+
+            // 1️⃣ Subtotal inicial con ajuste por tipo de alquiler
+            let subtotalInicial = equipos * diasIniciales * valorDia;
+            let ajusteTexto = '0%';
+            if (tipo === 'local') { subtotalInicial *= 0.95; ajusteTexto = '-5% (local físico)'; }
+            if (tipo === 'fuera') { subtotalInicial *= 1.05; ajusteTexto = '+5% (fuera de ciudad)'; }
+
+            // 2️⃣ Subtotal días adicionales con descuento acumulativo
+            let subtotalAdicionales = equipos * diasAdicionales * valorDia;
+            let descuentoAdicional = Math.min(0.02 * diasAdicionales, 0.20);
+            subtotalAdicionales *= (1 - descuentoAdicional);
+
+            // 3️⃣ Total final
+            let totalFinal = subtotalInicial + subtotalAdicionales;
+
+            // Aviso si se alcanza descuento máximo
+            let avisoMaxDescuento = '';
+            if (descuentoAdicional >= 0.20 && diasAdicionales > 0) {
+                avisoMaxDescuento = '<p class="aviso">⚠️ Se alcanzó el descuento máximo del 20%, para más días iniciar nuevo alquiler.</p>';
+            }
+
+            // Mostrar resultado en tabla
+            let resultadoHTML = `
+                <h2>Factura Cliente #${idCliente}</h2>
+                <table>
+                    <tr><th>Concepto</th><th>Cantidad</th><th>Días</th><th>Subtotal</th></tr>
+                    <tr><td>Alquiler inicial</td><td>${equipos}</td><td>${diasIniciales}</td><td>$${subtotalInicial.toLocaleString()}</td></tr>
+                    <tr><td>Días adicionales</td><td>${equipos}</td><td>${diasAdicionales}</td><td>$${subtotalAdicionales.toLocaleString()}</td></tr>
+                </table>
+                <p>Tipo de alquiler: ${tipo} (${ajusteTexto})</p>
+                <p>Descuento días adicionales: ${(descuentoAdicional*100).toFixed(0)}%</p>
+                <h3 class="total">Total a pagar: $${totalFinal.toLocaleString()}</h3>
+                ${avisoMaxDescuento}
+                <button onclick="nuevaFactura()">Nueva Factura</button>
+            `;
+            document.getElementById('resultado').innerHTML = resultadoHTML;
+            document.getElementById('resultado').style.display = 'block';
+
+            idCliente++;
+        }
+
+        function nuevaFactura() {
+            document.getElementById('formAlquiler').reset();
+            document.getElementById('resultado').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
